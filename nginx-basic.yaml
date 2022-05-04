@@ -1,0 +1,63 @@
+---
+- name: Setup web servers
+  hosts: web
+
+  tasks:
+  - debug:
+      var: ansible_facts.distribution
+
+  - set_fact:
+      nginx_user: www-data
+      nginx_www_root: /var/www/html
+    when: ansible_facts.distribution == 'Ubuntu'
+
+  - set_fact:
+      nginx_user: nginx
+      nginx_www_root: /usr/share/nginx/html
+    when: ansible_facts.distribution == 'Fedora'
+
+  - name: Ensure nginx package installed
+    package:
+      name: nginx
+      state: present
+
+  - name: Ensure nginx service enabled
+    systemd:
+      name: nginx
+      state: started
+      enabled: yes
+
+  - name: Nginx config
+    template:
+      src: files/nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+      backup: yes
+    register: nginx_config
+
+  - name: Nginx sites dirs
+    file:
+      path: '{{ item }}'
+      state: directory
+    loop:
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+
+  - name: Default site config
+    template:
+      src: files/default-site.conf.j2
+      dest: /etc/nginx/sites-available/default
+      backup: yes
+    register: default_site
+
+  - name: Enable default site
+    file:
+      path: /etc/nginx/sites-enabled/default
+      src: /etc/nginx/sites-available/default
+      state: link
+    register: default_site_link
+
+  - name: Reload nginx
+    systemd:
+      name: nginx
+      state: reloaded
+    when: nginx_config.changed or default_site.changed or default_site_link.changed

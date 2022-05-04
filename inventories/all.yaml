@@ -1,8 +1,12 @@
 all:
   children:
-    vms:
+    test:
       hosts:
         vm-01:
           ansible_host: 192.168.122.50
         vm-02:
           ansible_host: 192.168.122.36
+    web:
+      hosts:
+        vm-01:
+        vm-02:
