@@ -4,9 +4,13 @@
 
 Install needed software:
 
+Ubuntu:
+
 ```bash
-apt-get install virt-manager cloud-image-utils
+apt-get install qemu qemu-kvm libvirt-daemon libvirt-clients virt-manager cloud-image-utils
 ```
+
+TODO: Find out necessary pacages for other distributions.
 
 Create images directory:
 
