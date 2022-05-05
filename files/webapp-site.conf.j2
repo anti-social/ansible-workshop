@@ -1,0 +1,15 @@
+upstream app {
+    {% for srv in app_servers %}
+    server {{ srv }}:{{ app_port }};
+    {% endfor %}
+}
+
+server {
+    listen 80;
+    
+    server_name app.example.com;
+
+    location / {
+        proxy_pass http://app;
+    }
+}

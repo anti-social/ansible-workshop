@@ -1,0 +1,18 @@
+[project]
+name = "app"
+version = ""
+description = ""
+authors = [
+    {name = "Alexander Koval", email = "kovalidis@gmail.com"},
+]
+dependencies = [
+    "aiohttp>=3.8.1",
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[tool.pdm]
+
+[build-system]
+requires = ["pdm-pep517>=0.12.0"]
+build-backend = "pdm.pep517.api"

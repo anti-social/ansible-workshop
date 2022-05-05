@@ -1,0 +1,108 @@
+---
+- name: Setup application
+  hosts: web
+
+  vars:
+    app_build_dir: /tmp/app/build
+    app_port: 8080
+
+  handlers:
+  - name: reload-nginx
+    systemd:
+      name: nginx
+      state: reloaded
+
+  tasks:
+  - name: Ensure app build directory
+    file:
+      path: "{{ app_build_dir }}"
+      state: directory
+
+  - name: Copy sources
+    synchronize:
+      owner: no
+      group: no
+      src: app
+      dest: "{{ app_build_dir }}"
+      delete: yes
+      rsync_opts:
+      - "--filter=':- {{ playbook_dir }}/.gitignore'"
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+      cache_valid_time: "{{ 3600 * 24 }}"
+    when: ansible_facts.distribution == 'Ubuntu'
+
+  - name: Podman installed
+    package:
+      name:
+      - podman
+      state: present
+
+  - name: App image
+    podman_image:
+      name: app
+      path: "{{ app_build_dir }}/app"
+      force: yes
+
+  - name: Webapp container
+    containers.podman.podman_container:
+      name: webapp
+      image: app
+      command: python -m app
+      state: present
+      ports:
+      - "{{ app_port }}:8080"
+      generate_systemd:
+        path: /tmp/systemd
+      # https://github.com/containers/ansible-podman-collections/issues/353
+      # Or you can update podman module:
+      # ansible-galaxy collection install containers.podman
+      log_driver: journald
+    register: webapp_container
+
+  # We cannot update a systemd service because then
+  # it's not possible to restart the service
+  # due to process pid path is changed.
+  - name: Update webapp service
+    when: webapp_container.changed
+    block:
+    - service_facts:
+
+    - name: Stop webapp service
+      systemd:
+        name: container-webapp
+        state: stopped
+      when: ansible_facts.services['container-webapp.service'] is defined
+      # ingore_errors: yes
+
+    - name: Update webapp service
+      copy:
+        remote_src: yes
+        src: /tmp/systemd/container-webapp.service
+        dest: /etc/systemd/system/container-webapp.service
+      when: webapp_container.changed
+
+    - name: Start webapp service
+      systemd:
+        name: container-webapp
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+  - name: Ngingx webapp site
+    template:
+      src: files/webapp-site.conf.j2
+      dest: /etc/nginx/sites-available/webapp.example.com
+      backup: yes
+    vars:
+      app_servers: "{{ groups['web'] | map('extract', hostvars, 'ansible_host') | list }}"
+    notify: reload-nginx
+
+  - name: Enable webapp site
+    file:
+      src: /etc/nginx/sites-available/webapp.example.com
+      path: /etc/nginx/sites-enabled/webapp.example.com
+      state: link
+    notify: reload-nginx

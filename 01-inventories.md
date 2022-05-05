@@ -28,3 +28,16 @@ vm-01 | SUCCESS => {
     "ping": "pong"
 }
 ```
+
+See ansible facts:
+
+```bash
+ansible all -m debug -a var=ansible_facts
+```
+
+Or other useful variables:
+
+```bash
+ansible all -m debug -a var=groups
+ansible all -m debug -a var=hostvars
+```

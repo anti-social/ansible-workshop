@@ -1,4 +1,6 @@
 images/
 
+__pypackages__/
+
 ### Emacs ###
 *~

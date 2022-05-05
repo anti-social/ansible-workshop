@@ -22,8 +22,12 @@ SSH_PUB_KEY_FILE=id_ed25519.pub
   ```bash
   wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
   
-  virt-customize -a jammy-server-cloudimg-amd64.img --ssh-inject root:file:$HOME/.ssh/$SSH_PUB_KEY_FILE
-  guestfish -i -a jammy-server-cloudimg-amd64.img \
+  BASE_UBUNTU_IMAGE=my-ubuntu-jammy.qcow2
+  qemu-img create $BASE_UBUNTU_IMAGE 10G
+  virt-resize --format=qcow2 --expand /dev/sda1 jammy-server-cloudimg-amd64.img $BASE_UBUNTU_IMAGE
+
+  virt-customize -a $BASE_UBUNTU_IMAGE --ssh-inject root:file:$HOME/.ssh/$SSH_PUB_KEY_FILE
+  guestfish -i -a $BASE_UBUNTU_IMAGE \
     copy-in ../99-config.yaml /etc/netplan/ : \
     chown 0 0 /etc/netplan/99-config.yaml : \
     copy-in ../regenerate-ssh-host-keys.service /etc/systemd/system/ : \
@@ -42,7 +46,7 @@ SSH_PUB_KEY_FILE=id_ed25519.pub
 Create a virtual machine:
 
 ```bash
-cp jammy-server-cloudimg-amd64.img vm-01.qcow2
+cp $BASE_UBUNTU_IMAGE vm-01.qcow2
 sudo virt-install --name vm-01 --import --ram 1024 --vcpus 2 --disk vm-01.qcow2
 ```
 
