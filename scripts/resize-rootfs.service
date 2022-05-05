@@ -1,0 +1,10 @@
+[Unit]
+Description=Resize root filesystem
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/resize2fs /dev/vda1
+ExecStartPost=/bin/systemctl disable resize-rootfs
+
+[Install]
+WantedBy=multi-user.target
