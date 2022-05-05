@@ -3,9 +3,6 @@
   hosts: web
 
   tasks:
-  - debug:
-      var: ansible_facts.distribution
-
   - set_fact:
       nginx_user: www-data
       nginx_www_root: /var/www/html

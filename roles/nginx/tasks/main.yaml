@@ -1,0 +1,50 @@
+- set_fact:
+    nginx_user: www-data
+    nginx_www_root: /var/www/html
+  when: ansible_facts.distribution == 'Ubuntu'
+
+- set_fact:
+    nginx_user: nginx
+    nginx_www_root: /usr/share/nginx/html
+  when: ansible_facts.distribution == 'Fedora'
+
+- name: Ensure nginx package installed
+  package:
+    name: nginx
+    state: present
+
+- name: Ensure nginx service enabled
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Nginx config
+  template:
+    src: files/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    backup: yes
+  notify: reload-nginx
+
+- name: Nginx sites dirs
+  file:
+    path: '{{ item }}'
+    state: directory
+  loop:
+  - /etc/nginx/sites-available
+  - /etc/nginx/sites-enabled
+  notify: reload-nginx
+
+- name: Default site config
+  template:
+    src: files/default-site.conf.j2
+    dest: /etc/nginx/sites-available/default
+    backup: yes
+  notify: reload-nginx
+
+- name: Enable default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    src: /etc/nginx/sites-available/default
+    state: link
+  notify: reload-nginx
