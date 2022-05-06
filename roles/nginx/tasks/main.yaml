@@ -8,6 +8,13 @@
     nginx_www_root: /usr/share/nginx/html
   when: ansible_facts.distribution == 'Fedora'
 
+- name: Enable
+  seboolean:
+    name: httpd_can_network_relay
+    state: yes
+    persistent: yes
+  when: ansible_facts.selinux.status == 'enabled'
+
 - name: Ensure nginx package installed
   package:
     name: nginx

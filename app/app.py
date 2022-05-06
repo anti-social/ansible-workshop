@@ -1,8 +1,12 @@
+import os
+
 from aiohttp import web
 
 
 async def hello(request):
-    return web.Response(text="Hello, world")
+    return web.Response(
+        text=f"Hello, world from {os.environ.get('NAME', '???')}"
+    )
 
 
 def main():

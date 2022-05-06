@@ -1,0 +1,5 @@
+- name: Podman installed
+  package:
+    name:
+    - podman
+    state: present

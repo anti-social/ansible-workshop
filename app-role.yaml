@@ -1,6 +1,7 @@
 ---
 - name: Setup application
   hosts: web
+  any_errors_fatal: yes
 
   vars:
     app_build_dir: /tmp/app/build

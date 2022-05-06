@@ -19,12 +19,6 @@
     cache_valid_time: "{{ 3600 * 24 }}"
   when: ansible_facts.distribution == 'Ubuntu'
 
-- name: Podman installed
-  package:
-    name:
-    - podman
-    state: present
-
 - name: App image
   podman_image:
     name: app
@@ -35,8 +29,10 @@
   containers.podman.podman_container:
     name: webapp
     image: app
-    command: python -m app
     state: present
+    command: python -m app
+    env:
+      NAME: "{{ inventory_hostname }}"
     ports:
     - "{{ app_port }}:8080"
     generate_systemd:
@@ -82,7 +78,7 @@
     dest: /etc/nginx/sites-available/webapp.example.com
     backup: yes
   vars:
-    app_servers: "{{ groups['web'] | map('extract', hostvars, 'ansible_host') | list }}"
+    app_servers: "{{ groups['web'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
   notify: reload-nginx
 
 - name: Enable webapp site
