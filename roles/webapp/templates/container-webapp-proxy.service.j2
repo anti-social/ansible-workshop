@@ -1,0 +1,10 @@
+[Unit]
+Requires=container-webapp.service
+After=container-webapp.service
+
+Requires=container-webapp-proxy.socket
+After=container-webapp-proxy.socket
+
+[Service]
+ExecStartPre=/usr/bin/sleep 1
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=30s 127.0.0.1:{{ app_port }}

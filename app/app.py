@@ -4,8 +4,9 @@ from aiohttp import web
 
 
 async def hello(request):
+    print(os.environ)
     return web.Response(
-        text=f"Hello, world from {os.environ.get('NAME', '???')}"
+        text=f"Hello, world from {os.environ.get('NAME', '???')}\n"
     )
 
 
