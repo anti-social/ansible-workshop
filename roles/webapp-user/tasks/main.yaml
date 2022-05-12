@@ -59,7 +59,7 @@
         NAME: "{{ inventory_hostname }}"
         NOTIFY_SOCKET: /run/systemd/notify
       volumes:
-      - /run/systemd/notify
+      - "/run/systemd/notify:/run/systemd/notify"
       ports:
       - "127.0.0.1:{{ app_port }}:8080"
       healthcheck: curl -I localhost:8080
@@ -105,7 +105,7 @@
       scope: user
       enabled: yes
       state: restarted
-    when: webapp_proxy_srv.results[0].changed or True
+    when: webapp_proxy_srv.results[0].changed
 
   # To be able to use systemctl execute following command under webapp user:
   # export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus

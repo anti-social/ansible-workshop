@@ -31,7 +31,7 @@
       NAME: "{{ inventory_hostname }}"
       NOTIFY_SOCKET: /run/systemd/notify
     volumes:
-    - /run/systemd/notify
+    - "/run/systemd/notify:/run/systemd/notify"
     ports:
     - "127.0.0.1:{{ app_port }}:8080"
     healthcheck: curl -I localhost:8080
