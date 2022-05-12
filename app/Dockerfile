@@ -1,5 +1,8 @@
 FROM docker.io/library/python:3.10.4-bullseye
 
+RUN apt-get update -y
+RUN apt-get install -y --no-install-recommends net-tools telnet
+
 RUN curl -sSL --fail https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
 COPY pyproject.toml pdm.lock /tmp/build/

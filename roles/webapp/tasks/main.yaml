@@ -13,12 +13,6 @@
     rsync_opts:
     - "--filter=':- {{ playbook_dir }}/.gitignore'"
 
-- name: Update apt cache
-  apt:
-    update_cache: yes
-    cache_valid_time: "{{ 3600 * 24 }}"
-  when: ansible_facts.distribution == 'Ubuntu'
-
 - name: App image
   podman_image:
     name: app
@@ -35,11 +29,14 @@
     command: python -m app
     env:
       NAME: "{{ inventory_hostname }}"
+      NOTIFY_SOCKET: /run/systemd/notify
+    volumes:
+    - /run/systemd/notify
     ports:
     - "127.0.0.1:{{ app_port }}:8080"
     healthcheck: curl -I localhost:8080
-    healthcheck_start_period: 1s
-    healthcheck_interval: 30s
+    healthcheck_start_period: 2s
+    healthcheck_interval: 10s
     generate_systemd:
       path: /tmp/systemd
     # https://github.com/containers/ansible-podman-collections/issues/353
@@ -48,13 +45,24 @@
     log_driver: journald
   register: webapp_container
 
+# - name: Configure webapp service
+#   blockinfile:
+#     path: /tmp/systemd/container-webapp.service
+#     insertafter: "\\[Unit\\]"
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK of Unit"
+#     block: |
+#       StopWhenUnneeded=yes
+#   register: webapp_container_config
+
+- name: Ensure systemd service directory
+  file:
+    path: /etc/systemd/system/container-webapp.service.d
+    state: directory
+
 - name: Configure webapp service
-  blockinfile:
-    path: /tmp/systemd/container-webapp.service
-    insertafter: "\\[Unit\\]"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK of Unit"
-    block: |
-      StopWhenUnneeded=yes
+  copy:
+    src: webapp-override.conf
+    dest: /etc/systemd/system/container-webapp.service.d/override.conf
   register: webapp_container_config
 
 # We cannot update a systemd service because then

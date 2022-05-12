@@ -59,6 +59,11 @@ requires_python = ">=3.7"
 summary = "multidict implementation"
 
 [[package]]
+name = "sdnotify"
+version = "0.3.2"
+summary = "A pure Python implementation of systemd's service notification protocol (sd_notify)"
+
+[[package]]
 name = "yarl"
 version = "1.7.2"
 requires_python = ">=3.6"
@@ -70,7 +75,7 @@ dependencies = [
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:1a62e124c0c564d88cb4f12b637953591f3b15c3299fde421f53142d2c45c7a4"
+content_hash = "sha256:47b9a14ef2188093929ae4f6b7b485ce58e9b138e2bc7d8cdd2c09ca3b051f93"
 
 [metadata.files]
 "aiohttp 3.8.1" = [
@@ -288,6 +293,9 @@ content_hash = "sha256:1a62e124c0c564d88cb4f12b637953591f3b15c3299fde421f53142d2
     {file = "multidict-6.0.2-cp39-cp39-win32.whl", hash = "sha256:23b616fdc3c74c9fe01d76ce0d1ce872d2d396d8fa8e4899398ad64fb5aa214a"},
     {file = "multidict-6.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:4bae31803d708f6f15fd98be6a6ac0b6958fcf68fda3c77a048a4f9073704aae"},
     {file = "multidict-6.0.2.tar.gz", hash = "sha256:5ff3bd75f38e4c43f1f470f2df7a4d430b821c4ce22be384e1459cb57d6bb013"},
+]
+"sdnotify 0.3.2" = [
+    {file = "sdnotify-0.3.2.tar.gz", hash = "sha256:73977fc746b36cc41184dd43c3fe81323e7b8b06c2bb0826c4f59a20c56bb9f1"},
 ]
 "yarl 1.7.2" = [
     {file = "yarl-1.7.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f2a8508f7350512434e41065684076f640ecce176d262a7d54f0da41d99c5a95"},

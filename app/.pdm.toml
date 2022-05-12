@@ -1,2 +1,2 @@
 [python]
-path = "/nix/var/nix/profiles/default/bin/python"
+path = "/usr/bin/python"
