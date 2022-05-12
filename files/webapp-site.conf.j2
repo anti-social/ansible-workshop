@@ -1,6 +1,6 @@
 upstream app {
-    {% for srv in app_servers %}
-    server {{ srv }}:{{ app_port }};
+    {% for backend in app_backends %}
+    server {{ backend }}:{{ app_proxy_port }};
     {% endfor %}
 }
 

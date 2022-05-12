@@ -1,0 +1,127 @@
+- set_fact:
+    webapp_user_home: /srv/webapp
+
+# - name: Disable selinux
+#   selinux:
+#     state: disabled
+
+- name: Webapp user
+  user:
+    name: webapp
+    home: "{{ webapp_user_home }}"
+
+- name: Check webapp user session
+  stat:
+    path: /var/lib/systemd/linger/webapp
+  register: webapp_linger_file
+- name: Activate webapp user session
+  command: loginctl enable-linger webapp
+  when: not webapp_linger_file.stat.exists
+
+- name: Ensure app build directory
+  file:
+    path: "{{ app_build_dir }}"
+    state: directory
+- name: Copy sources
+  synchronize:
+    owner: no
+    group: no
+    src: app
+    dest: "{{ app_build_dir }}"
+    delete: yes
+    rsync_opts:
+    - "--filter=':- {{ playbook_dir }}/.gitignore'"
+
+- become: yes
+  become_user: webapp
+  block:
+  - name: App image
+    podman_image:
+      name: app
+      path: "{{ app_build_dir }}/app"
+      force: yes
+    register: app_image
+
+  - name: Webapp container
+    containers.podman.podman_container:
+      name: webapp
+      image: app
+      state: present
+      recreate: "{{ app_image.changed }}"
+      command: python -m app
+      env:
+        NAME: "{{ inventory_hostname }}"
+        NOTIFY_SOCKET: /run/systemd/notify
+      volumes:
+      - /run/systemd/notify
+      ports:
+      - "127.0.0.1:{{ app_port }}:8080"
+      healthcheck: curl -I localhost:8080
+      healthcheck_start_period: 2s
+      healthcheck_interval: 10s
+      generate_systemd:
+        path: "{{ webapp_user_home }}/.config/systemd/user"
+      # https://github.com/containers/ansible-podman-collections/issues/353
+      # Or you can update podman module:
+      # ansible-galaxy collection install containers.podman
+      log_driver: journald
+    register: webapp_container
+
+  - name: Ensure systemd service directory
+    file:
+      path: "{{ webapp_user_home }}/.config/systemd/user/container-webapp.service.d"
+      state: directory
+
+  - name: Configure webapp service
+    copy:
+      src: roles/webapp/files/webapp-override.conf
+      dest: "{{ webapp_user_home }}/.config/systemd/user/container-webapp.service.d/override.conf"
+    register: webapp_container_config
+
+  - name: Webapp proxy
+    template:
+      src: "roles/webapp/templates/container-webapp-proxy.{{ item }}.j2"
+      dest: "{{ webapp_user_home }}/.config/systemd/user/container-webapp-proxy.{{ item }}"
+    loop:
+    - socket
+    - service
+    register: webapp_proxy_srv
+
+  - name: Reload systemd
+    systemd:
+      scope: user
+      daemon_reload: yes
+    when: webapp_container_config.changed or webapp_proxy_srv.changed
+
+  - name: Restart webapp proxy
+    systemd:
+      name: "container-webapp-proxy.socket"
+      scope: user
+      enabled: yes
+      state: restarted
+    when: webapp_proxy_srv.results[0].changed or True
+
+  # To be able to use systemctl execute following command under webapp user:
+  # export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
+- set_fact:
+    app_backends: "{{ groups['web'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | select('defined') }}"
+- set_fact:
+    app_is_all_backends_defined: "{{ groups['web'] | length == app_backends | length }}"
+- debug: var=app_is_all_backends_defined
+
+- when: app_is_all_backends_defined
+  block:
+  - name: Ngingx webapp site
+    template:
+      src: files/webapp-site.conf.j2
+      dest: /etc/nginx/sites-available/webapp.example.com
+      backup: yes
+    notify: reload-nginx
+
+  - name: Enable webapp site
+    file:
+      src: /etc/nginx/sites-available/webapp.example.com
+      path: /etc/nginx/sites-enabled/webapp.example.com
+      state: link
+    notify: reload-nginx

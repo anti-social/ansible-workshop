@@ -1,0 +1,17 @@
+---
+- name: Setup application
+  hosts: web
+  any_errors_fatal: yes
+
+  vars:
+    app_build_dir: /tmp/app/build
+    app_port: 8081
+    app_proxy_port: 8080
+
+  handlers:
+  # We must use import_tasks so handlers are resolved before starting tasks.
+  # Either we can make special role, something like nginx-reload with the reload handler.
+  - import_tasks: roles/nginx/handlers/main.yaml
+
+  roles:
+  - webapp-user
