@@ -1,22 +1,28 @@
 - set_fact:
     webapp_user_home: /srv/webapp
 
-# - name: Disable selinux
-#   selinux:
-#     state: disabled
+- name: Disable selinux
+  selinux:
+    state: disabled
+  when: ansible_facts.selinux.status == 'enabled'
 
 - name: Webapp user
   user:
     name: webapp
     home: "{{ webapp_user_home }}"
 
-- name: Check webapp user session
-  stat:
-    path: /var/lib/systemd/linger/webapp
-  register: webapp_linger_file
+# - name: Check webapp user session
+#   stat:
+#     path: /var/lib/systemd/linger/webapp
+#   register: webapp_linger_file
+# - name: Activate webapp user session
+#   command: loginctl enable-linger webapp
+#   when: not webapp_linger_file.stat.exists
+
 - name: Activate webapp user session
-  command: loginctl enable-linger webapp
-  when: not webapp_linger_file.stat.exists
+  logind:
+    user: webapp
+    linger: enabled
 
 - name: Ensure app build directory
   file:
