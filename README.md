@@ -91,13 +91,13 @@ cd images
 
 - Ubuntu
   ```bash
-  ../scripts/create-vm.sh ubuntu u-01 5G
+  ../scripts/create-vm.sh ubuntu u-01 10G
   ```
 
 - Fedora
 
   ```bash
-  ../scripts/create-vm.sh fedora f-01 5G
+  ../scripts/create-vm.sh fedora f-01 10G
   ```
   
 If you see following error:
