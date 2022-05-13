@@ -19,6 +19,14 @@
   sudo aura -A guestfs-tools
   ```
 
+### Ensure that your user has read/write access to /dev/kvm
+
+``` bash
+sudo usermod -a -G $(stat -c '%G' /dev/kvm) $(id -n -u)
+```
+
+Adding user to a group will take effect next login.
+
 ### If you want to access you VMs via names you should set up nsswitch
 
 Install corresponding package:
@@ -91,10 +99,33 @@ cd images
   ```bash
   ../scripts/create-vm.sh fedora f-01 5G
   ```
+  
+If you see following error:
+
+```
+error: Failed to create domain from .u-01.xml
+error: Cannot access storage file '<pwd>/images/u-01.qcow2' (as uid:975, gid:975): Permission denied
+```
+
+Check that your home directory is available for reading of `libvirt-qemu` user. If it is not, you have several options: 
+
+- add `libvirt-qemu` to the main group of your user:
+
+  ```bash
+  sudo usermod -a -G $(stat -c '%G' $HOME) libvirt-qemu
+  ```
+
+- grant to all users read access to your home directory:
+ 
+  ```bash
+  sudo chmod o+rx $HOME
+  ```
+
+- either move your images into other directory, for example `/var/lib/libvirt/images`.
 
 ### Try to login by ssh
 
-``` bash
+```bash
 ssh -l root u-01
 ```
 

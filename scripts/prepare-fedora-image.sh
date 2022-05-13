@@ -3,6 +3,7 @@ set -eux
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 . "$SCRIPT_DIR/env.sh"
+. "$SCRIPT_DIR/setup-appliance.sh"
 
 if [ ! -f "$FEDORA_CLOUD_IMAGE" ]; then
   wget https://download.fedoraproject.org/pub/fedora/linux/releases/$FEDORA_RELEASE/Cloud/x86_64/images/$FEDORA_CLOUD_IMAGE

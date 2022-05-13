@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 if [ -f "$HOME/.ssh/id_ed25519.pub" ]; then
   SSH_PUB_KEY="$HOME/.ssh/id_ed25519.pub"
