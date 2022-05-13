@@ -10,6 +10,7 @@
   user:
     name: webapp
     home: "{{ webapp_user_home }}"
+    password: "{{ webapp_user_password | string | password_hash('sha512', 'qwertyasdf') }}"
 
 # - name: Check webapp user session
 #   stat:
