@@ -1,4 +1,4 @@
-app_domain_name: f-01
+app_domain_name: u-01
 webapp_user_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           38316633386236333537386461326162333435356364333930333934393363663335333866353266

@@ -77,8 +77,9 @@
     systemd:
       name: container-webapp
       state: stopped
-    when: ansible_facts.services['container-webapp.service'] is defined
-    # ingore_errors: yes
+    when: >-
+      ansible_facts.services['container-webapp.service'] is defined and
+      ansible_facts.services['container-webapp.service'].state == 'started'
 
   - name: Update webapp service
     copy:
@@ -118,7 +119,7 @@
     dest: /etc/nginx/sites-available/webapp.example.com
     backup: yes
   vars:
-    app_servers: "{{ groups['web'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+    app_backends: "{{ groups['web'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
   notify: reload-nginx
 
 - name: Enable webapp site

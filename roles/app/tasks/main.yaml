@@ -1,0 +1,48 @@
+# - debug: var=ansible_facts
+
+- name: Ensure app build dir
+  file:
+    path: "{{ app_build_dir }}"
+    state: directory
+
+- name: Copy sources
+  synchronize:
+    owner: no
+    group: no
+    src: app
+    dest: "{{ app_build_dir }}"
+    delete: yes
+    rsync_opts:
+    - "--filter=':- {{ playbook_dir }}/.gitignore'"
+
+# - name: Podman repository
+#   apt_repository:
+#     repo: "deb [trusted=yes] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ ansible_facts.distribution_version }}/ /"
+#     state: present
+#   when: ansible_facts.distribution_release in ['bionic', 'focal']
+
+- name: Podman installed
+  apt:
+    name:
+    - podman
+    update_cache: yes
+    state: present
+
+- name: App image
+  podman_image:
+    name: app
+    path: "{{ app_build_dir }}/app"
+    force: yes
+  register: app_image
+
+- name: App container
+  containers.podman.podman_container:
+    name: app
+    image: app
+    state: started
+    recreate: "{{ app_image.changed }}"
+    command: python -m app
+    ports:
+    - "127.0.0.1:8080:8080"
+    log_driver: journald
+  register: webapp_container

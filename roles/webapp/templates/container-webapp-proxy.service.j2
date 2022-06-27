@@ -1,3 +1,6 @@
+{% set supports_idle_exit = ansible_facts.distribution != 'Ubuntu' or ansible_facts.distribution_version is version('22.04', '>=') %}
+
+# {{ supports_idle_exit }}
 [Unit]
 Requires=container-webapp.service
 After=container-webapp.service
@@ -7,4 +10,7 @@ After=container-webapp-proxy.socket
 
 [Service]
 # ExecStartPre=/usr/bin/sleep 1
-ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=30s 127.0.0.1:{{ app_port }}
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd {% if supports_idle_exit %}--exit-idle-time=30s{% endif %} 127.0.0.1:{{ app_port }}
+
+[Install]
+WantedBy=default.target
